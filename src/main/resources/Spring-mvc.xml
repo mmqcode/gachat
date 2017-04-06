@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <context:component-scan base-package="com.mmq.gachat.*">
+    </context:component-scan>
+    <mvc:annotation-driven/>
+
+    <mvc:resources mapping="/static/**" location="/staticResources/">
+    </mvc:resources>
+
+    <bean id="gson" class="com.google.gson.Gson"></bean>
+
+    <!-- timer -->
+    <bean id="AutoGenerateChatCouple" class="com.mmq.gachat.timer.AutoGenerateChatCouple"></bean>
+    <bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="AutoGenerateChatCouple" />
+        <property name="targetMethod" value="generateChatingCouple" />
+        <property name="concurrent" value="false" />
+    </bean>
+
+    <bean id="AutoGenerateChatCoupleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="jobDetail" />
+        <property name="startDelay" value="0" />
+        <property name="repeatInterval" value="500" /> <!-- 一秒两次 -->
+        <!-- <property name="repeatInterval" value="60000" />-->
+    </bean>
+
+    <bean  class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="AutoGenerateChatCoupleTrigger" />
+            </list>
+        </property>
+    </bean>
+</beans>

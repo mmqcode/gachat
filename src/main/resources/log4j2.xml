@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="off" monitorInterval="1800">
+
+    <properties>
+        <property name="LOG_HOME">logs</property>
+        <property name="FILE_NAME">rabbitlog</property>
+    </properties>
+
+    <Appenders>
+        <!-- 输出到控制台 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- 部署时如果发现web容器控制台乱码，可以将charset改为GBK -->
+            <PatternLayout charset="GBK" pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </Console>
+
+        <!-- 文件方式记录，日志文件位于当前配置文件的相对目录中 -->
+        <RollingRandomAccessFile name="running-log"
+                                 fileName="${log4j:configParentLocation}/${LOG_HOME}/${FILE_NAME}.log" filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+            <!-- 日志输出格式 -->
+            <PatternLayout charset="UTF-8"
+                    pattern="%date{yyyy-MM-dd HH:mm:ss.SSS} %level [%thread][%file:%line] - %msg%n" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <!-- 每个日志文件最大200 MB -->
+                <SizeBasedTriggeringPolicy size="200 MB" />
+            </Policies>
+            <!-- 最多保留20个日志文件 -->
+            <DefaultRolloverStrategy max="20" />
+        </RollingRandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <!-- 日志同时输出控制台和记录到文件 -->
+        <!-- info级别和info以上的信息将会输出到文件，包括warn、error和fatal -->
+        <logger level="info" name="com.mmq.gachat">
+            <AppenderRef ref="running-log"/>
+        </logger>
+
+        <!-- 如果是使用root logger，则error及以上的信息将会打出到控制台 -->
+        <Root level="info">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/rabbit
+     http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+
+
+    <!-- 为了使用注解的bean类对象 -->
+    <import resource="Spring-mvc.xml"></import>
+    <!--配置connection-factory，指定连接rabbit server参数 -->
+    <rabbit:connection-factory id="connectionFactory"
+                               username="mmq" password="mmq" host="192.168.1.187" port="5672" virtual-host="vhost1" />
+
+
+    <!--通过指定下面的admin信息，当前producer中的exchange和queue会在rabbitmq服务器上自动生成 -->
+    <rabbit:admin connection-factory="connectionFactory" />
+
+    <!--定义queue queueTest 消息队列-->
+    <rabbit:queue name="queueTest" durable="true" auto-delete="false" exclusive="false" />
+
+    <rabbit:queue name="queueJob" durable="true" auto-delete="false" exclusive="false" />
+
+    <rabbit:queue name="queueObject" durable="true" auto-delete="false" exclusive="false" />
+
+
+    <!-- 定义direct exchange，绑定queueTest和queueJob -->
+    <rabbit:direct-exchange name="exchangeTest" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="queueTest" key="queueTestKey"></rabbit:binding>
+            <rabbit:binding queue="queueJob" key="queueJobKey"></rabbit:binding>
+            <rabbit:binding queue="queueObject" key="queueObjectKey"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+    
+    <rabbit:fanout-exchange name="fanoutExchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="queueJob"></rabbit:binding>
+            <rabbit:binding queue="queueTest"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <rabbit:topic-exchange name="topicExchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="queueTest" pattern="grw.worker.*"></rabbit:binding>
+            <rabbit:binding queue="queueJob" pattern="grw.#"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+
+    <!--
+    <rabbit:headers-exchange name="headersExchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="" key="" value=""></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:headers-exchange>
+    -->
+
+    <!--定义rabbit template用于数据的接收和发送 -->
+    <rabbit:template id="amqpTemplate"  connection-factory="connectionFactory" exchange="exchangeTest" />
+    <rabbit:template id="amqpTemplateFnout" connection-factory="connectionFactory" exchange="fanoutExchange"/>
+    <rabbit:template id="amqpTemplateTopic" connection-factory="connectionFactory" exchange="topicExchange" />
+
+
+
+    <!-- 消息接收者已经通过注解配置 -->
+
+     <!-- queue litener  观察 监听模式 当有消息到达时会通知监听在对应的队列上的监听对象-->
+     <!--<rabbit:listener-container connection-factory="connectionFactory">-->
+        <!--<rabbit:listener  queues="queueTest" ref="messageConsumer"/>-->
+         <!--<rabbit:listener queues="queueObject" ref="messageConsumer"  />-->
+    <!--</rabbit:listener-container>-->
+
+    <!---->
+    <!--<rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual">-->
+        <!--<rabbit:listener queues="queueJob" ref="manualReceiver"  />-->
+    <!--</rabbit:listener-container>-->
+
+
+</beans>
