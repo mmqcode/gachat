@@ -38,6 +38,17 @@ public class Constants {
     public static final String MESSAGE_DIRECTION = ":to:";
 
 
+    /**
+     * 用户取消聊天消息通知
+     */
     public static final String USER_CANCEL_CHATTING_WITH = ":CANCEL:";
+
+
+    /**
+     * 用户匹配到的历史人员
+     */
+    public static final String USER_HISTORY_MATCH = ":HISTORY:MATCH";
+
+
 
 }

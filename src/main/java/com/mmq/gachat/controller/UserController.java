@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Administrator on 2017/3/15.
@@ -89,6 +88,7 @@ public class UserController {
                 HashOperations<String, String, Object> hasOperation = stringRedisTemplate.opsForHash();
                 resultMap.put("token", (String)hasOperation.get(Constants.LOGIN_USER_KEY, user.getUsername()));
                 responseJson = gson.toJson(resultMap);
+
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -200,5 +200,60 @@ public class UserController {
             responseJson = this.jsonTool.getSimpleMsgJson("程序异常:"+e.getMessage(), "1");
         }
         this.ioTool.writeMessageResponse(responseJson, response);
+    }
+
+    /**
+     * 获取当前已经登录的用户数量
+     * @param response
+     */
+    @RequestMapping(value = "/getCurrentUsersNumber", method = RequestMethod.POST)
+    public void getCurrentUsersNumber(HttpServletResponse response){
+        String resultJson;
+        Map<String, String> resultMap = new HashMap<>();
+        HashOperations<String, String, Object> hasOperation = stringRedisTemplate.opsForHash();
+        Long number = hasOperation.size(Constants.LOGIN_USER_KEY);
+        resultMap.put("code", "0");
+        resultMap.put("number", number+"");
+        resultJson = this.jsonTool.mapToJsonString(resultMap);
+        this.ioTool.writeMessageResponse(resultJson, response);
+        //logger.info("获取了登录人数:"+number);
+    }
+
+    /**
+     * 获取用户的匹配历史人员
+     * @param response
+     * @param username
+     */
+    @RequestMapping(value = "/getHistoryMatch", method = RequestMethod.POST)
+    public void getHistoryMatch(HttpServletResponse response, String username){
+
+        Map<String, Object> resultMap;
+        List<Map<String,String>> matchsList;
+        String resultJson;
+
+        ZSetOperations<String, String> zSetOperations = template.opsForZSet();
+        long currentTime = System.currentTimeMillis();
+        long sevenDaysAgo = TimeTool.getDateByDifferFromCertainDate(new Date(), -7).getTime();
+        Set<ZSetOperations.TypedTuple<String>> zsetData = zSetOperations.reverseRangeByScoreWithScores(username+Constants.USER_HISTORY_MATCH,
+                sevenDaysAgo, currentTime);
+        if(!zsetData.isEmpty()){
+            resultMap = new HashMap<>();
+            matchsList = new ArrayList<>();
+            HashMap<String, String> map;
+            for(ZSetOperations.TypedTuple<String> historyMatch:zsetData){
+                map = new HashMap<>();
+                map.put("value", historyMatch.getValue());
+                Date matchDate = TimeTool.getCurrentTimeBySeconds(historyMatch.getScore().longValue());
+                String matchDateString = TimeTool.getFormatTime(matchDate);
+                map.put("time", matchDateString);
+                matchsList.add(map);
+            }
+            resultMap.put("matches", matchsList);
+            resultMap.put("code", "0");
+            resultJson = gson.toJson(resultMap);
+        }else{
+            resultJson = this.jsonTool.getSimpleMsgJson("无数据", "1");
+        }
+        this.ioTool.writeMessageResponse(resultJson, response);
     }
 }

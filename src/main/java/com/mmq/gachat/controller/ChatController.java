@@ -183,6 +183,7 @@ public class ChatController {
                     resultMap.put("chatMessage", chatMessage);
                     resultMap.put("code","0");
                     resultMap.put("msg", "接收成功!");
+
                     break;
                 }
                 if(System.currentTimeMillis() - startTime > timeoutTime){

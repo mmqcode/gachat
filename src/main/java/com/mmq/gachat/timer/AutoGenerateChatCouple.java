@@ -34,7 +34,7 @@ public class AutoGenerateChatCouple {
 
     private static final Logger logger = LogManager.getLogger(AutoGenerateChatCouple.class);
 
-    public void generateChatingCouple(){
+    public void generateChattingCouple(){
 
 
         try{
@@ -48,6 +48,7 @@ public class AutoGenerateChatCouple {
             for(String username:couple){
                 coupleList.add(username);
             }
+            couple = null;
             logger.info("人员匹配成功：{}", coupleList);
             redisTemplate.execute(new SessionCallback() {
                 @Override
@@ -75,6 +76,15 @@ public class AutoGenerateChatCouple {
                     ValueOperations<String, String> valueOperations = operations.opsForValue();
                     valueOperations.set(coupleList.get(0)+Constants.CHATTING_WITH, coupleList.get(1));
                     valueOperations.set(coupleList.get(1)+Constants.CHATTING_WITH, coupleList.get(0));
+
+                    //添加到各自的历史匹配人员中。
+                    ZSetOperations<String, String> zSetOperations = operations.opsForZSet();
+                    zSetOperations.add(coupleList.get(0)+Constants.USER_HISTORY_MATCH, coupleList.get(1),
+                            System.currentTimeMillis());
+                    zSetOperations.add(coupleList.get(1)+Constants.USER_HISTORY_MATCH, coupleList.get(0),
+                            System.currentTimeMillis());
+
+
                     operations.exec();
                     return null;
                 }
