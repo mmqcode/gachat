@@ -24,7 +24,7 @@
     <bean id="AutoGenerateChatCouple" class="com.mmq.gachat.timer.AutoGenerateChatCouple"></bean>
     <bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="AutoGenerateChatCouple" />
-        <property name="targetMethod" value="generateChatingCouple" />
+        <property name="targetMethod" value="generateChattingCouple" />
         <property name="concurrent" value="false" />
     </bean>
 
